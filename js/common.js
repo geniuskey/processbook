@@ -468,6 +468,111 @@
     bar.querySelector("[id$='-theme']").before(feedbackButton);
     body.prepend(bar);
 
+    // Search chapter metadata immediately; load section and visual titles on demand.
+    const progressBar = bar.querySelector("[id$='-progress']");
+    const spacer = bar.querySelector(".spacer");
+    const leftNav = document.createElement("div");
+    leftNav.className = "book-nav-left";
+    leftNav.append(bar.querySelector("[id$='-menu']"), bar.querySelector("a[class$='-logo']"));
+    const rightNav = document.createElement("div");
+    rightNav.className = "book-nav-right";
+    [...bar.children].filter((el) => el !== spacer && el !== progressBar).forEach((el) => rightNav.appendChild(el));
+    spacer.remove();
+    const search = document.createElement("div");
+    search.className = "book-search";
+    search.innerHTML = '<svg class="book-search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input type="search" aria-label="이 책의 챕터, 섹션, 시뮬레이터, 그림 검색" placeholder="이 책 검색" autocomplete="off"><div class="book-search-results" aria-live="polite"></div>';
+    bar.prepend(leftNav);
+    bar.insertBefore(search, progressBar);
+    bar.insertBefore(rightNav, progressBar);
+    const searchInput = search.querySelector("input");
+    const searchResults = search.querySelector(".book-search-results");
+    const closeSearch = () => { search.classList.remove("open"); searchResults.replaceChildren(); };
+    let detailEntries = [];
+    let detailsLoaded = false;
+    let detailPromise;
+    function loadDetails() {
+      if (detailPromise) return detailPromise;
+      detailPromise = Promise.all(CHAPTERS.map(async (chapter) => {
+        try {
+          const response = await fetch(href(chapter.slug));
+          if (!response.ok) return [];
+          const doc = new DOMParser().parseFromString(await response.text(), "text/html");
+          const main = doc.querySelector("main.chapter");
+          if (!main) return [];
+          const entries = [];
+          [...main.querySelectorAll("section > h2")].forEach((heading, i) => {
+            entries.push({ type: "섹션", title: heading.textContent.trim(), chapter, hash: heading.parentElement.id || `s${i + 1}` });
+          });
+          [...main.querySelectorAll(".sim")].filter((sim) => sim.querySelector(".sim-head h3")).forEach((sim, i) => {
+            entries.push({ type: "시뮬레이터", title: sim.querySelector(".sim-head h3").textContent.trim(), chapter, hash: sim.id || `search-sim-${i + 1}` });
+          });
+          [...main.querySelectorAll("figure")].filter((figure) => figure.querySelector("figcaption")).forEach((figure, i) => {
+            const caption = figure.querySelector("figcaption").textContent.replace(/\s+/g, " ").trim();
+            entries.push({ type: "그림", title: caption.slice(0, 140), chapter, hash: figure.id || `search-fig-${i + 1}` });
+          });
+          return entries;
+        } catch (error) { return []; }
+      })).then((parts) => { detailEntries = parts.flat(); detailsLoaded = true; renderSearch(); });
+      return detailPromise;
+    }
+    function renderSearch() {
+      const words = searchInput.value.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+      searchResults.replaceChildren();
+      if (!words.length) { closeSearch(); return; }
+      const includesWords = (value) => words.every((word) => value.toLocaleLowerCase().includes(word));
+      const chapterMatches = CHAPTERS.filter((c) => includesWords([c.num, c.title, c.desc, ...(c.tags || [])].join(" ")))
+        .map((c) => ({ type: "챕터", title: c.title, chapter: c, hash: "" }));
+      const detailMatches = detailEntries.filter((entry) => includesWords(entry.title));
+      const matches = [
+        ...chapterMatches.slice(0, 4),
+        ...detailMatches.filter((entry) => entry.type === "섹션").slice(0, 5),
+        ...detailMatches.filter((entry) => entry.type === "시뮬레이터").slice(0, 4),
+        ...detailMatches.filter((entry) => entry.type === "그림").slice(0, 4),
+      ];
+      matches.forEach((entry) => {
+        const link = document.createElement("a");
+        link.href = href(entry.chapter.slug) + (entry.hash ? `#${entry.hash}` : "");
+        const title = document.createElement("strong");
+        title.textContent = entry.title;
+        const context = document.createElement("small");
+        context.textContent = `${entry.chapter.num} · ${entry.chapter.title} · ${entry.type}`;
+        link.append(title, context);
+        searchResults.appendChild(link);
+      });
+      if (chapterMatches.length + detailMatches.length > matches.length) {
+        const more = document.createElement("p");
+        more.textContent = `상위 ${matches.length}개 표시 · 검색어를 더 구체적으로 입력해 보세요`;
+        searchResults.appendChild(more);
+      }
+      if (detailPromise && !detailsLoaded) {
+        const status = document.createElement("p");
+        status.textContent = "섹션·시뮬레이터·그림 목록을 불러오는 중…";
+        searchResults.appendChild(status);
+      } else if (!matches.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "검색 결과가 없습니다";
+        searchResults.appendChild(empty);
+      }
+      search.classList.add("open");
+    }
+    searchInput.addEventListener("input", () => { if (searchInput.value.trim()) loadDetails(); renderSearch(); });
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { closeSearch(); searchInput.blur(); }
+      else if (e.key === "ArrowDown") { const first = searchResults.querySelector("a"); if (first) { e.preventDefault(); first.focus(); } }
+      else if (e.key === "Enter") { const first = searchResults.querySelector("a"); if (first) { e.preventDefault(); first.click(); } }
+    });
+    searchResults.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { closeSearch(); searchInput.focus(); }
+      else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        const links = [...searchResults.querySelectorAll("a")];
+        const next = links.indexOf(document.activeElement) + (e.key === "ArrowDown" ? 1 : -1);
+        e.preventDefault();
+        (links[next] || searchInput).focus();
+      }
+    });
+    document.addEventListener("pointerdown", (e) => { if (!search.contains(e.target)) closeSearch(); });
+
+
     // drawer
     const drawer = document.createElement("nav");
     drawer.className = "pb-drawer";
@@ -501,6 +606,12 @@
     // chapter page extras
     const main = document.querySelector("main.chapter");
     if (main) {
+      // Give search results stable anchors even when the source has no id.
+      [...main.querySelectorAll(".sim")].filter((sim) => sim.querySelector(".sim-head h3")).forEach((sim, i) => { if (!sim.id) sim.id = `search-sim-${i + 1}`; });
+      [...main.querySelectorAll("figure")].filter((figure) => figure.querySelector("figcaption")).forEach((figure, i) => { if (!figure.id) figure.id = `search-fig-${i + 1}`; });
+      if (/^#(?:s\d+|search-(?:sim|fig)-)/.test(location.hash)) {
+        requestAnimationFrame(() => document.getElementById(location.hash.slice(1))?.scrollIntoView());
+      }
       // numbered h2 + TOC
       const layout = document.createElement("div");
       layout.className = "pb-layout";
