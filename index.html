@@ -118,7 +118,7 @@
   var tagName = { sim: "시뮬레이터", "3d": "3D" };
   grid.innerHTML = PB.CHAPTERS.map(function (c) {
     return '<a class="ch-card" href="chapters/' + c.slug + '.html"><span class="num">CHAPTER ' + c.num + "</span><h3>" + c.title + "</h3><p>" + c.desc + '</p><span class="tags">' +
-      c.tags.map(function (t) { return '<span class="' + (t === "sim" ? "sim" : t === "3d" ? "d3" : "") + '">' + (tagName[t] || t) + "</span>"; }).join("") + "</span></a>";
+      c.tags.map(function (t) { return '<span class="' + (t === "sim" ? "ch-tag-sim" : t === "3d" ? "ch-tag-3d" : "") + '">' + (tagName[t] || t) + "</span>"; }).join("") + "</span></a>";
   }).join("");
 
   // 히어로: 작은 CMOS 단면이 스스로 쌓였다가 다시 시작한다
