@@ -60,7 +60,8 @@
           <tr><td>오버레이 계측</td><td>위·아래층 표식(박스 인 박스, 회절 격자)의 상대 위치</td><td>층간 정렬 오차</td><td>영상 기반(IBO)·회절 기반(DBO), 수 Å 정밀도</td></tr>
           <tr><td>X선 (XRF, XRR, XRD)</td><td>형광·반사·회절</td><td>조성, 밀도, 두께, 변형</td><td>금속막·SiGe 조성</td></tr>
           <tr><td>4탐침 · 비접촉 전기</td><td>전류·전압</td><td>면저항, 주입 도즈</td><td>주입·실리사이드 관리</td></tr>
-          <tr><td>TEM · AFM</td><td>단면 투과 전자 현미경, 원자간력 현미경</td><td>실제 단면, 표면 거칠기</td><td>파괴적·느림, 기준 측정용</td></tr>
+          <tr><td>TEM</td><td>단면 투과 전자 현미경</td><td>실제 내부 단면</td><td>단면 시편 제작은 파괴적·느림, 기준 측정용</td></tr>
+          <tr><td>AFM</td><td>원자간력 현미경으로 표면 스캔</td><td>표면 거칠기, 높이·폭</td><td>힘을 제어한 비파괴 표면 측정 가능, 국소 기준 측정용</td></tr>
         </tbody>
       </table>
     </div>
@@ -139,7 +140,7 @@
         <div class="stat"><span class="k">예상 불량률</span><span class="v" id="sp-o-p">—</span></div>
         <div class="stat"><span class="k">규칙 위반</span><span class="v" id="sp-o-r" style="font-size:14px">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: ① 평균 이동을 +1.5로 주면 40번째 로트 이후 점들이 중심선 한쪽에 몰린다. 관리 한계를 넘지 않아도 “한쪽에 연속 8점” 규칙(웨스턴 일렉트릭)이 먼저 경보를 낸다. ② 표류를 주면 점들이 서서히 기울어지는 추세가 보인다(장비 부품 마모, 챔버 벽 오염). ③ σ를 줄이면 같은 사양에서 Cpk가 커진다. 관리 한계(빨간 점선)는 처음 30개 로트로 정했다.</div>
+      <div class="sim-note">해볼 것: ① 평균 이동을 +1.5로 주면 40번째 로트 이후 점들이 중심선 한쪽에 몰린다. 관리 한계를 넘지 않아도 “한쪽에 연속 8점” 규칙(웨스턴 일렉트릭)이 먼저 경보를 낸다. ② 표류를 주면 점들이 서서히 기울어지는 추세가 보인다(장비 부품 마모, 챔버 벽 오염). ③ σ를 줄이면 같은 사양에서 Cpk가 커진다. 관리 한계(빨간 점선)는 처음 30개 로트로 정했다. 3점 중 2점이 같은 쪽 2σ 밖이면 나머지 점의 위치와 관계없이 경보가 난다. 중심선과 정확히 같은 점은 한쪽 연속 기록을 끊는다. 이 실험은 WECO 규칙 중 3σ·2σ·8연속과 6점 추세만 표시한다.</div>
     </div>
   </section>
 
@@ -282,8 +283,13 @@
       var viol = [], flag = new Array(v.length).fill(false), run = 0, side = 0;
       v.forEach(function (x, i) {
         if (x > UCL || x < LCL) { flag[i] = true; if (viol.indexOf("3σ 초과") < 0) viol.push("3σ 초과"); }
-        var sd2 = x > m ? 1 : -1; if (sd2 === side) run++; else { side = sd2; run = 1; } if (run >= 8) { flag[i] = true; if (viol.indexOf("한쪽 8연속") < 0) viol.push("한쪽 8연속"); }
-        if (i >= 2) { var n2 = [v[i], v[i - 1], v[i - 2]].filter(function (q) { return Math.abs(q - m) > 2 * sd && Math.sign(q - m) === Math.sign(x - m); }).length; if (n2 >= 2) { flag[i] = true; if (viol.indexOf("3점 중 2점 2σ 밖") < 0) viol.push("3점 중 2점 2σ 밖"); } }
+        var sd2 = Math.sign(x - m); if (sd2 === 0) { side = 0; run = 0; } else if (sd2 === side) run++; else { side = sd2; run = 1; } if (run >= 8) { flag[i] = true; if (viol.indexOf("한쪽 8연속") < 0) viol.push("한쪽 8연속"); }
+        if (i >= 2) {
+          var last3 = v.slice(i - 2, i + 1);
+          var above = last3.filter(function (q) { return q > m + 2 * sd; }).length;
+          var below = last3.filter(function (q) { return q < m - 2 * sd; }).length;
+          if (above >= 2 || below >= 2) { flag[i] = true; if (viol.indexOf("3점 중 2점 2σ 밖") < 0) viol.push("3점 중 2점 2σ 밖"); }
+        }
         if (i >= 5) { var inc = true, dec = true; for (var k = i - 5; k < i; k++) { if (!(v[k + 1] > v[k])) inc = false; if (!(v[k + 1] < v[k])) dec = false; } if (inc || dec) { flag[i] = true; if (viol.indexOf("6연속 추세") < 0) viol.push("6연속 추세"); } }
       });
       var box = { x: 58, y: 16, w: w - 150, h: h - 62 };

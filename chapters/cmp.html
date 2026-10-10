@@ -108,7 +108,7 @@
         <div class="stat"><span class="k">B 남은 단차</span><span class="v" id="sh-o-b">—</span></div>
         <div class="stat"><span class="k">A–B 업 높이 차 (칩 안 편차)</span><span class="v" id="sh-o-d">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: ① 밀도 0.2인 영역은 업이 빠르게 깎여 일찍 평탄해지고, 0.8인 영역은 거의 블랭킷처럼 천천히 깎인다. 두 영역의 업 높이 차가 그대로 칩 안 두께 편차가 된다. ② 패드가 단단해 접촉 높이가 작을수록 평탄화 능력(단차 제거)이 좋지만 웨이퍼 전체 균일도에는 불리하다. ③ 시간을 늘려도 이미 평탄해진 뒤의 영역 간 차이는 줄지 않는다. 그래서 설계 단계에서 밀도를 맞춘다(더미 필). (평균 블랭킷 연마 속도 5 nm/s)</div>
+      <div class="sim-note">해볼 것: ① 밀도 0.2인 영역은 업이 빠르게 깎여 일찍 평탄해지고, 0.8인 영역은 거의 블랭킷처럼 천천히 깎인다. 두 영역의 업 높이 차가 그대로 칩 안 두께 편차가 된다. ② 패드가 단단해 접촉 높이가 작을수록 평탄화 능력(단차 제거)이 좋지만 웨이퍼 전체 균일도에는 불리하다. ③ 시간을 늘려도 이미 평탄해진 뒤의 영역 간 차이는 줄지 않는다. 그래서 설계 단계에서 밀도를 맞춘다(더미 필). (평균 블랭킷 연마 속도 5 nm/s: 두 표면의 면적가중 평균 높이는 항상 이 속도로 내려간다)</div>
     </div>
   </section>
 
@@ -203,13 +203,29 @@
     var gT = PB.range("sh-t", function (v) { return v + " s"; }, rr);
     var R0 = 5;
     function sim(rho, h0, hc, T) {
-      var up = 0, dn = -h0, out = [], dt = 0.5;
+      var up = 0, dn = -h0, gap = h0, out = [], dt = 0.5;
       for (var t = 0; t <= T + 1e-9; t += dt) {
         out.push([t, up, dn]);
-        var h = up - dn, ru, rd;
-        if (h >= hc) { ru = R0 / rho; rd = 0; }
-        else { var f = h / hc; ru = R0 / (rho + (1 - rho) * (1 - f)); rd = ru * (1 - f); }
-        up -= ru * dt; dn -= rd * dt; if (dn > up) dn = up;
+        var remain = dt;
+        // Separate the up-only stage at h = hc, then integrate dh/dt exactly.
+        if (gap >= hc) {
+          var contactTime = (gap - hc) * rho / R0;
+          if (remain <= contactTime) { gap -= R0 / rho * remain; remain = 0; }
+          else { gap = hc; remain -= contactTime; }
+        }
+        if (remain > 0 && gap > 0) {
+          var lo = 0, hi = gap, previous = gap;
+          // rho*hc*ln(h1/h0) + (1-rho)*(h1-h0) = -R0*dt.
+          for (var j = 0; j < 50; j++) {
+            var mid = (lo + hi) / 2;
+            var elapsed = (rho * hc * Math.log(previous / mid) + (1 - rho) * (previous - mid)) / R0;
+            if (elapsed > remain) lo = mid; else hi = mid;
+          }
+          gap = (lo + hi) / 2;
+        }
+        // Mean removal is R0 regardless of density; do not clamp one surface alone.
+        var mean = -(1 - rho) * h0 - R0 * (t + dt);
+        up = mean + (1 - rho) * gap; dn = mean - rho * gap;
       }
       return out;
     }

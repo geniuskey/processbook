@@ -28,3 +28,47 @@ for(const [name,hold] of [['furn',1800],['rta',10],['spike',0],['flash',.001]]){
 }
 let scripts=0;for(const file of fs.readdirSync(path.join(root,'chapters')).filter(x=>x.endsWith('.html'))){for(const m of read('chapters/'+file).matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)){if(m[1].includes('src='))continue;if(m[1].includes('ld+json'))JSON.parse(m[2]);else new vm.Script(m[2],{filename:file});scripts++;}}
 console.log({doseCases,cmpCases,annealPresets:4,compiledScripts:scripts});
+
+// Follow-up: actual CMP trajectory versus independently integrated rate equations.
+const planar={};vm.createContext(planar);
+const pa=cmp.indexOf('    var R0 = 5;'),pb=cmp.indexOf('    cv = PB.canvas',pa);
+vm.runInContext(cmp.slice(pa,pb),planar);
+let planarCases=0;
+for(const density of [.1,.2,.5,.9])for(const initial of [100,120,500])for(const contact of [20,120,400]){
+ const trajectory=planar.sim(density,initial,contact,300);
+ for(const [time,up,down] of trajectory){
+  const removed=-(density*up+(1-density)*(down+initial));
+  assert(Math.abs(removed-5*time)<1e-8,`CMP mean removal ${density}/${initial}/${contact}/${time}`);
+  assert(up>=down-1e-9);
+ }
+ // RK4 integrates the same differential model independently, with dt <= .002s.
+ for(const time of [.5,5,30]){
+  const linearTime=Math.max(0,(initial-contact)*density/5);
+  let gap=initial,remaining=time;
+  const linear=Math.min(remaining,linearTime);gap-=5/density*linear;remaining-=linear;
+  if(remaining>0){
+   const count=Math.ceil(remaining/.002),step=remaining/count;
+   const rate=h=>-5*h/(density*contact+(1-density)*h);
+   for(let i=0;i<count;i++){const k1=rate(gap),k2=rate(gap+step*k1/2),k3=rate(gap+step*k2/2),k4=rate(gap+step*k3);gap+=step*(k1+2*k2+2*k3+k4)/6;}
+  }
+  const actual=trajectory[Math.round(time/.5)];
+  assert(Math.abs(actual[1]-actual[2]-gap)<2e-7,`CMP RK4 gap ${density}/${initial}/${contact}/${time}`);
+  planarCases++;
+ }
+}
+// Execute the original SPC rule block with deterministic standardized fixtures.
+const metrology=read('chapters/metrology.html');
+const sa=metrology.indexOf('      var viol = [], flag ='),sb=metrology.indexOf('      var box =',sa);
+function rules(values){const ctx={v:values,m:0,sd:1,UCL:3,LCL:-3};vm.createContext(ctx);vm.runInContext(metrology.slice(sa,sb),ctx);return ctx;}
+let spcWindows=0;
+for(const a of [-2.2,-2,-.5,0,.5,2,2.2])for(const b of [-2.2,-2,-.5,0,.5,2,2.2])for(const d of [-2.2,-2,-.5,0,.5,2,2.2]){
+ const v=[a,b,d],expected=v.filter(x=>x>2).length>=2||v.filter(x=>x<-2).length>=2;
+ assert.equal(rules(v).viol.includes('3점 중 2점 2σ 밖'),expected);spcWindows++;
+}
+for(const sign of [-1,1]){
+ assert(rules([2.1*sign,2.2*sign,-.5*sign]).flag[2]);
+ assert(rules(Array(8).fill(sign)).viol.includes('한쪽 8연속'));
+ assert(!rules([...Array(7).fill(sign),0,sign]).viol.includes('한쪽 8연속'));
+}
+assert(!rules(Array(8).fill(0)).viol.includes('한쪽 8연속'));
+console.log({planarRK4Cases:planarCases,planarConservationPoints:36*601,spcWindows,spcRunFixtures:7});
