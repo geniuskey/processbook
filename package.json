@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "euiyun-book build"
+    "build": "euiyun-book build",
+    "test": "node scripts/factcheck-regression.cjs"
   },
   "dependencies": {
     "@euiyun/book": "https://codeload.github.com/geniuskey/book/tar.gz/refs/tags/v0.1.2"

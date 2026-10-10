@@ -105,7 +105,7 @@
           <label class="ctrl"><span>배경 도핑 (반대형) <output id="ip-b-out"></output></span><input type="range" id="ip-b" min="14" max="18" step="0.1" value="15"></label>
           <label class="ctrl"><span>스크린 산화막 <output id="ip-s-out"></output></span><input type="range" id="ip-s" min="0" max="40" step="1" value="0"></label>
           <label class="ctrl"><span>분포 모양</span><select id="ip-m"><option value="g">가우시안</option><option value="p" selected>비대칭 (반가우시안 접합)</option></select></label>
-          <label class="ctrl"><span>채널링 꼬리 (틸트 0°일 때) <output id="ip-c-out"></output></span><input type="range" id="ip-c" min="0" max="0.2" step="0.005" value="0"></label>
+          <label class="ctrl"><span>도즈 중 채널링 꼬리 비율 (틸트 0°일 때) <output id="ip-c-out"></output></span><input type="range" id="ip-c" min="0" max="0.2" step="0.005" value="0"></label>
         </div>
       </div>
       <div class="sim-readout">
@@ -115,7 +115,7 @@
         <div class="stat"><span class="k">스크린 막에 남은 도즈</span><span class="v" id="ip-o-s">—</span></div>
         <div class="stat"><span class="k">면저항 (전부 활성화 가정)</span><span class="v" id="ip-o-rs">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: ① 붕소 30 keV는 R<sub>p</sub> ≈ 100 nm이지만 같은 에너지의 비소는 ≈ 24 nm다. 무거울수록 얕다. 그래서 얕은 n⁺ 소스·드레인은 비소, 얕은 p⁺는 BF₂(붕소 에너지가 11/49로 줄어드는 효과)를 쓴다. ② 도즈를 10배 올리면 첨두 농도도 10배지만 접합 깊이는 조금(√ln)만 깊어진다. ③ 스크린 산화막을 두면 분포가 그만큼 얕아지고 일부가 산화막에 남는다. 채널링도 줄여 준다. ④ 채널링 꼬리를 켜면 로그 축에서 깊은 쪽에 긴 꼬리가 생겨 접합이 깊어진다. (LSS 계열 표 값 보간, 교육용 근사)</div>
+      <div class="sim-note">해볼 것: ① 붕소 30 keV는 R<sub>p</sub> ≈ 100 nm이지만 같은 에너지의 비소는 ≈ 24 nm다. 무거울수록 얕다. 그래서 얕은 n⁺ 소스·드레인은 비소, 얕은 p⁺는 BF₂(붕소 에너지가 11/49로 줄어드는 효과)를 쓴다. ② 도즈를 10배 올리면 첨두 농도도 10배지만 접합 깊이는 조금(√ln)만 깊어진다. ③ 스크린 산화막을 두면 분포가 그만큼 얕아지고 일부가 산화막에 남는다. 채널링도 줄여 준다. ④ 총 도즈를 가우시안 본체와 채널링 꼬리에 나누므로 꼬리 비율을 올려도 도즈가 추가되지 않는다. 채널링 꼬리를 켜면 로그 축에서 깊은 쪽에 긴 꼬리가 생겨 접합이 깊어진다. (LSS 계열 표 값 보간, 교육용 근사)</div>
     </div>
     <div class="table-wrap">
       <table>
@@ -245,8 +245,8 @@
       var norm = dose / (Math.sqrt(2 * Math.PI) * (s1 + s2) / 2 * 1e-7);
       var lam = Rp * 0.8 + 2 * dR;
       var N = function (z) { // z: 등가 실리콘 깊이(nm)
-        var s = z < Rp ? s1 : s2, v = norm * Math.exp(-0.5 * Math.pow((z - Rp) / s, 2));
-        if (ch > 0 && z > Rp) v += ch * norm * 0.5 * Math.exp(-(z - Rp) / lam);
+        var s = z < Rp ? s1 : s2, v = (1 - ch) * norm * Math.exp(-0.5 * Math.pow((z - Rp) / s, 2));
+        if (ch > 0 && z > Rp) v += ch * dose / (lam * 1e-7) * Math.exp(-(z - Rp) / lam);
         return v;
       };
       var zox = tox * k, data = [], xmax = Math.max(60, (Rp + 6 * dR + (ch ? 5 * lam : 0)) * 1.1 - zox);

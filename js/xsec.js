@@ -491,8 +491,8 @@
         const dz = step * dx * MATS[mt].k;
         const zc = z + dz / 2;
         z += dz;
-        let c = peak * Math.exp(-0.5 * Math.pow((zc - Rp) / dR, 2));
-        if (ch > 0 && zc > Rp) c += ch * peak * 0.5 * Math.exp(-(zc - Rp) / lam);
+        let c = (1 - ch) * peak * Math.exp(-0.5 * Math.pow((zc - Rp) / dR, 2));
+        if (ch > 0 && zc > Rp) c += ch * p.dose / (lam * 1e-7) * Math.exp(-(zc - Rp) / lam);
         add[i] += c * step;  // 셀 하나를 지나는 길이(셀 단위) 가중
         if (z > Rp + 8 * dR + (ch ? 6 * lam : 0)) break;
       }

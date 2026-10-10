@@ -56,7 +56,7 @@
     <div class="formula">$$\mathrm{EOT} = t_{\text{high-k}}\,\frac{3.9}{k} + t_{\text{IL}}$$
       <div class="where">\(t_{\text{IL}}\)은 계면 품질을 위해 남기는 0.5~1 nm의 SiO₂ 계면층. HfO₂ 2 nm는 EOT 약 0.35 nm만 더하면서 터널링은 수천 배 줄인다.</div>
     </div>
-    <p>그런데 HfO₂ 위에 폴리실리콘을 얹으면 계면에서 페르미 준위가 고정되어 문턱 전압이 맞지 않고, 폴리 속 공핍층이 EOT를 늘린다. 그래서 전극도 금속(TiN, TiAl, W 등)으로 바뀌었다. 금속 게이트는 일함수로 V<sub>t</sub>를 정하므로 NMOS와 PMOS에 서로 다른 금속을 써야 하고, 금속은 소스·드레인 활성화 어닐(~1000 °C)을 견디지 못한다. 해법이 <span class="term">게이트 라스트</span><span class="en">(Replacement Metal Gate, RMG)</span>다. 폴리로 가짜(더미) 게이트를 만들어 12장의 흐름대로 소스·드레인까지 끝낸 뒤, 절연막을 덮고 CMP로 더미 게이트 윗면을 드러내 폴리를 빼내고, 그 홈에 high-k와 금속을 채운다. 아래 나노시트 시뮬레이터에도 이 단계가 들어 있다.</p>
+    <p>그런데 HfO₂ 위에 폴리실리콘을 얹으면 계면에서 페르미 준위가 고정되어 문턱 전압이 맞지 않고, 폴리 속 공핍층이 EOT를 늘린다. 그래서 전극도 금속(TiN, TiAl, W 등)으로 바뀌었다. 금속 게이트는 일함수로 V<sub>t</sub>를 정하므로 NMOS와 PMOS에 서로 다른 금속을 써야 하고, 소스·드레인 활성화 어닐(~1000 °C)은 금속/high-k 계면 반응·확산과 일함수 변화를 일으켜 문턱 전압을 바꿀 수 있다. 이 위험을 줄이는 대표적인 방법이 <span class="term">게이트 라스트</span><span class="en">(Replacement Metal Gate, RMG)</span>다. 폴리로 가짜(더미) 게이트를 만들어 12장의 흐름대로 소스·드레인까지 끝낸 뒤, 절연막을 덮고 CMP로 더미 게이트 윗면을 드러내 폴리를 빼내고, 그 홈에 high-k와 금속을 채운다. 아래 나노시트 시뮬레이터에도 이 단계가 들어 있다. 열적으로 안정한 재료를 선택하는 게이트 퍼스트 방식도 사용된다.</p>
   </section>
 
   <section id="3d">
@@ -83,7 +83,7 @@
       <table>
         <thead><tr><th>세대</th><th>구조</th><th>핵심 공정 변화</th></tr></thead>
         <tbody>
-          <tr><td>~28 nm</td><td>평면 HKMG</td><td>게이트 라스트, SiGe 소스·드레인(PMOS 변형)</td></tr>
+          <tr><td>~28 nm</td><td>평면 HKMG</td><td>게이트 퍼스트 또는 라스트(공정 통합에 따라), SiGe 소스·드레인(PMOS 변형)</td></tr>
           <tr><td>22/16~5 nm</td><td>FinFET</td><td>SADP/SAQP 핀, 핀 높이 균일도, 핀 컷, 컨포멀 도핑·에피</td></tr>
           <tr><td>3~2 nm (2022~2025)</td><td>GAA 나노시트</td><td>Si/SiGe 초격자 에피, 내부 스페이서, 선택적 SiGe 식각(방출), 시트 사이 HKMG 채움</td></tr>
           <tr><td>2 nm 이하 (2026~)</td><td>GAA + 후면 전력</td><td>웨이퍼 뒷면 박화·후면 콘택·후면 배선, 웨이퍼 본딩</td></tr>
@@ -173,7 +173,7 @@
   <section class="keypoints" id="summary">
     <h2>핵심 정리</h2>
     <ol>
-      <li>HKMG: HfO₂로 물리 두께를 늘려 누설을 줄이고, 금속 게이트로 폴리 공핍·페르미 고정을 없앴다. 금속이 고온을 못 견뎌 게이트 라스트(RMG)를 쓴다.</li>
+      <li>HKMG: HfO₂로 물리 두께를 늘려 누설을 줄이고, 금속 게이트로 폴리 공핍·페르미 고정을 없앴다. 게이트 라스트(RMG)는 고온 활성화에 따른 계면·일함수 변화 위험을 줄인다. 열적으로 안정한 게이트 퍼스트 방식도 있다.</li>
       <li>게이트가 채널을 감싸는 면이 평면(1) → FinFET(3) → GAA(4)로 늘며 단채널 효과를 억제한다.</li>
       <li>나노시트 공정: Si/SiGe 초격자 에피 → 핀 식각 → 더미 게이트·스페이서 → S/D 리세스 → 내부 스페이서 → S/D 에피 → 더미 게이트 제거 → SiGe 방출 → HKMG 채움.</li>
       <li>후면 전력 공급은 전원망을 뒷면으로 옮겨 IR 드롭과 앞면 배선 혼잡을 줄인다.</li>
@@ -188,7 +188,7 @@
         <button class="opt">3.6 nm</button><button class="opt" data-correct>약 1.2 nm</button><button class="opt">약 0.6 nm</button><button class="opt">15.4 nm</button>
       </div><div class="quiz-exp">3 × 3.9/20 + 0.6 = 0.585 + 0.6 ≈ 1.19 nm.</div></div>
       <div class="quiz-q"><p>게이트 라스트(RMG)를 쓰는 주된 이유는?</p><div class="opts">
-        <button class="opt">노광 횟수를 줄이려고</button><button class="opt" data-correct>금속 게이트와 high-k가 소스·드레인 활성화 고온을 견디지 못하므로, 고온 공정을 다 끝낸 뒤 넣으려고</button><button class="opt">게이트를 더 두껍게 하려고</button><button class="opt">폴리를 재활용하려고</button>
+        <button class="opt">노광 횟수를 줄이려고</button><button class="opt" data-correct>고온 활성화에 따른 계면 반응과 일함수 변화를 줄이려고, 고온 공정 뒤에 금속 게이트를 넣는다</button><button class="opt">게이트를 더 두껍게 하려고</button><button class="opt">폴리를 재활용하려고</button>
       </div><div class="quiz-exp">일함수 금속은 고온에서 반응·확산해 V<sub>t</sub>가 흔들린다. 더미 폴리로 자리를 잡아 두고 마지막에 바꿔 끼운다.</div></div>
       <div class="quiz-q"><p>나노시트 공정에서 SiGe 희생층을 녹일 때 가장 중요한 것은?</p><div class="opts">
         <button class="opt">이방성</button><button class="opt" data-correct>Si에 대한 매우 높은 선택비 (Si 채널은 거의 깎지 않음)</button><button class="opt">빠른 식각 속도</button><button class="opt">높은 이온 에너지</button>

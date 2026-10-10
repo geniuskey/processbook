@@ -144,7 +144,7 @@
         <div class="sim-controls">
           <div class="ctrl"><span>방식</span><div class="seg" id="rt-m"><button data-value="furn">퍼니스</button><button data-value="rta">RTA</button><button data-value="spike" class="on">스파이크</button><button data-value="flash">밀리초</button></div></div>
           <label class="ctrl"><span>최고 온도 <output id="rt-T-out"></output></span><input type="range" id="rt-T" min="800" max="1350" step="5" value="1050"></label>
-          <label class="ctrl"><span>유지 시간 <output id="rt-s-out"></output></span><input type="range" id="rt-s" min="0" max="3.6" step="0.05" value="0"></label>
+          <label class="ctrl"><span>유지 시간 <output id="rt-s-out"></output></span><input type="range" id="rt-s" min="-1" max="7" step="any" value="-1"></label>
           <label class="ctrl"><span>승온 속도 <output id="rt-r-out"></output></span><input type="range" id="rt-r" min="-1" max="6" step="0.1" value="2.4"></label>
         </div>
       </div>
@@ -154,7 +154,7 @@
         <div class="stat"><span class="k">같은 Dt의 등가 1000 °C 시간</span><span class="v" id="rt-o-eq">—</span></div>
         <div class="stat"><span class="k">활성화 지표 (최고 온도 기준)</span><span class="v" id="rt-o-a">—</span></div>
       </div>
-      <div class="sim-note">해볼 것: ① 퍼니스 1000 °C 30분과 스파이크 1050 °C를 비교해 보자. 최고 온도는 스파이크가 높지만 √(Dt)는 수십 배 작다. ② 스파이크의 승온 속도를 50 → 400 °C/s로 올리면 오르내리는 동안의 확산이 줄어든다. ③ 밀리초 어닐은 1300 °C를 넘겨도 확산이 거의 없다. 활성화 지표(고체 용해도는 온도가 높을수록 크다)는 가장 높다. (온도 이력을 1 ms 간격으로 적분, 냉각은 승온과 같은 속도 가정)</div>
+      <div class="sim-note">해볼 것: ① 퍼니스 1000 °C 30분과 스파이크 1050 °C를 비교해 보자. 최고 온도는 스파이크가 높지만 √(Dt)는 수십 배 작다. ② 스파이크의 승온 속도를 50 → 400 °C/s로 올리면 오르내리는 동안의 확산이 줄어든다. ③ 밀리초 어닐은 1300 °C를 넘겨도 확산이 거의 없다. 활성화 지표(고체 용해도는 온도가 높을수록 크다)는 가장 높다. (온도 이력을 4000개 시간 구간의 중점으로 적분, 냉각은 승온과 같은 속도 가정)</div>
     </div>
   </section>
 
@@ -189,8 +189,8 @@
         <button class="opt">4배</button><button class="opt">변하지 않는다</button><button class="opt" data-correct>1/2로 줄어든다</button><button class="opt">1/4로 줄어든다</button>
       </div><div class="quiz-exp">\(C(0,t) = Q/\sqrt{\pi Dt}\)이므로 \(t\)가 4배면 1/2.</div></div>
       <div class="quiz-q"><p>E<sub>a</sub> = 3.5 eV인 도펀트의 확산 계수는 1000 °C에서 1100 °C로 올릴 때 대략 몇 배가 되는가?</p><div class="opts">
-        <button class="opt">약 1.1배</button><button class="opt">약 2배</button><button class="opt" data-correct>약 8~9배</button><button class="opt">약 100배</button>
-      </div><div class="quiz-exp">\(\exp[(3.5/k)(1/1273 - 1/1373)] = \exp(40600 \times 5.72\times10^{-5}) \approx e^{2.32} \approx 10\). 대략 한 자릿수.</div></div>
+        <button class="opt">약 1.1배</button><button class="opt">약 2배</button><button class="opt" data-correct>약 10배</button><button class="opt">약 100배</button>
+      </div><div class="quiz-exp">\(\exp[(3.5/k)(1/1273 - 1/1373)] = \exp(40600 \times 5.72\times10^{-5}) \approx e^{2.32} \approx 10\). 정확한 절대온도 1273.15 K와 1373.15 K를 쓰면 약 10.21배다.</div></div>
       <div class="quiz-q"><p>스파이크 어닐이 퍼니스 어닐보다 얕은 접합에 유리한 이유는?</p><div class="opts">
         <button class="opt">온도가 더 낮아서</button><button class="opt" data-correct>최고 온도는 높아 활성화는 잘 되지만, 고온에 머무는 시간이 극히 짧아 Dt가 작아서</button><button class="opt">도펀트를 더 넣어 주므로</button><button class="opt">산소 분위기라서</button>
       </div><div class="quiz-exp">활성화는 온도에, 확산은 온도와 시간의 곱(적분)에 좌우된다.</div></div>
@@ -275,12 +275,12 @@
   (function () {
     var cv, rr = function () { cv && cv.redraw(); };
     var PRE = { furn: [1000, 1800, -0.78], rta: [1050, 10, 1.7], spike: [1050, 0, 2.4], flash: [1300, 0.001, 6] };
-    var gM = PB.seg("rt-m", function (v) { var p = PRE[v]; gT.set(p[0]); gS.set(p[1] > 0 ? Math.log10(p[1] * 1000) - 3 + 3 : 0); gS.set(p[1] > 0 ? Math.max(0, Math.log10(p[1]) + 3) : 0); gR.set(p[2]); });
+    var gM = PB.seg("rt-m", function (v) { var p = PRE[v]; gT.set(p[0]); gS.set(p[1] > 0 ? Math.log10(p[1]) + 3 : -1); gR.set(p[2]); });
     var gT = PB.range("rt-T", function (v) { return v + " °C"; }, rr);
-    var gS = PB.range("rt-s", function (v) { return v === 0 ? "0 (스파이크)" : tf(Math.pow(10, v - 3)); }, rr);
+    var gS = PB.range("rt-s", function (v) { return v === -1 ? "0 (스파이크)" : tf(Math.pow(10, v - 3)); }, rr);
     var gR = PB.range("rt-r", function (v) { return PB.fmt(Math.pow(10, v), 3) + " °C/s"; }, rr);
     function profile() {
-      var Tp = gT(), hold = gS() === 0 ? 0 : Math.pow(10, gS() - 3), rate = Math.pow(10, gR()), T0 = 500;
+      var Tp = gT(), hold = gS() === -1 ? 0 : Math.pow(10, gS() - 3), rate = Math.pow(10, gR()), T0 = 500;
       var tr = (Tp - T0) / rate;
       return { Tp: Tp, hold: hold, rate: rate, T0: T0, tr: tr, total: 2 * tr + hold, T: function (t) { if (t < tr) return T0 + rate * t; if (t < tr + hold) return Tp; if (t < 2 * tr + hold) return Tp - rate * (t - tr - hold); return T0; } };
     }

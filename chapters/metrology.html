@@ -120,7 +120,7 @@
     <h2>SPC: 숫자로 공정을 지키기</h2>
     <p>계측값은 하나하나 보는 것이 아니라 흐름으로 본다. <span class="term">통계적 공정 관리</span><span class="en">(SPC)</span>는 관리도에 측정값을 시간순으로 찍고, 평균 ±3σ의 관리 한계를 벗어나거나 이상한 패턴이 나타나면 원인을 찾는다. 관리 한계는 공정이 스스로 보이는 변동이고, 사양 한계(USL·LSL)는 제품이 요구하는 범위다. 둘의 관계가 <span class="term">공정 능력</span>이다.</p>
     <div class="formula">$$C_p = \frac{\mathrm{USL}-\mathrm{LSL}}{6\sigma}, \qquad C_{pk} = \frac{\min(\mathrm{USL}-\mu,\ \mu-\mathrm{LSL})}{3\sigma}$$
-      <div class="where">Cpk = 1이면 사양 밖 비율이 약 0.27%(양쪽), 1.33이면 약 63 ppm, 1.67이면 약 0.6 ppm, 2.0이면 수 ppb다. 반도체 핵심 공정은 1.33~1.67 이상을 목표로 한다.</div>
+      <div class="where">정규분포의 평균이 양쪽 규격 중앙에 있을 때 Cpk = 1이면 사양 밖 비율이 약 0.27%(양쪽), 1.33이면 약 63 ppm, 1.67이면 약 0.6 ppm, 2.0이면 수 ppb다. 분포나 평균 위치가 다르면 Cpk만으로 불량률을 정할 수 없다. 반도체 핵심 공정은 1.33~1.67 이상을 목표로 한다.</div>
     </div>
     <div class="sim" id="sim-spc">
       <div class="sim-head"><span class="sim-tag">SIMULATOR</span><h3>관리도와 Cpk</h3></div>
