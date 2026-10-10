@@ -463,3 +463,8 @@ svg .ink { stroke: #1f2a3a; stroke-width: .8; fill: none; opacity: .45; }
 @media (max-width: 760px) { .book-nav-left > a small { display: none; } .book-nav-right .series-link span { display: none; } .book-nav-right .series-link { width: 36px; padding: 0; } }
 @media (max-width: 600px) { .book-nav-left, .book-nav-right { flex: 0 0 auto; } .book-nav-left > a { display: none; } .book-search { flex: 1 1 auto; } .book-search-results { left: 50%; transform: translateX(-50%); } }
 @media (max-width: 440px) { .book-nav-right .series-link { display: none; } .book-search input::placeholder { color: transparent; } }
+
+/* Shareable simulator anchor links */
+.sim-link { margin-left: auto; flex: 0 0 auto; font: 12px var(--mono); color: var(--text-faint); }
+.sim-link:hover, .sim-link:focus-visible { color: var(--accent); text-decoration: none; }
+.sim { scroll-margin-top: 1rem; }

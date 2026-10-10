@@ -688,3 +688,24 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build);
   else build();
 })();
+
+// Simulator deep links: add a shareable # link to each simulator heading.
+(function () {
+  function addSimulatorLinks() {
+    document.querySelectorAll(".sim[id] > .sim-head").forEach((head) => {
+      if (head.querySelector(".sim-link")) return;
+      const link = document.createElement("a");
+      link.className = "sim-link";
+      link.href = "#" + head.parentElement.id;
+      link.textContent = "#";
+      link.title = "이 시뮬레이터로 가는 링크";
+      link.setAttribute("aria-label", "이 시뮬레이터로 가는 링크");
+      head.appendChild(link);
+    });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", addSimulatorLinks, { once: true });
+  } else {
+    addSimulatorLinks();
+  }
+})();
